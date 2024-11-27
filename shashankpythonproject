@@ -1,0 +1,161 @@
+[10:19, 27/11/2024] Shashank Naidu: import datetime
+import csv
+
+class RoomBooking:
+    def _init_(self, total_rooms, price_per_room):
+        self.total_rooms = total_rooms
+        self.available_rooms = total_rooms
+        self.price_per_room = price_per_room
+        self.booked_rooms = 0
+        self.total_revenue = 0
+        self.bookings = []  # List to store all booking details
+        self.monthly_data = []  # To store data for monthly analysis
+
+    def book_room(self, guest_name, contact_number, email, check_in_date, check_out_date, num_rooms, payment_method, aadhaar_number, age, room_type, total_amount, special_requests, emergency_contact_name, emergency_contact_number):
+        if num_rooms <= self.available_rooms:
+            # Update room availability and revenue
+            self.booked_rooms += num_rooms
+            self.available_rooms -= num_rooms
+            self.total_revenue += total_amount
+
+            # Get the current date and time for booking
+            booking_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # Create booking details
+            booking_details = {
+                "guest_name": guest_name,
+                "contact_number": contact_number,
+                "email": email,
+                "check_in_date": check_in_date,
+                "check_out_date": check_out_date,
+                "num_rooms": num_rooms,
+                "payment_method": payment_method,
+                "aadhaar_number": aadhaar_number,
+                "age": age,
+                "room_type": room_type,
+                "total_amount": total_amount,
+                "special_requests": special_requests,
+                "emergency_contact_name": emergency_contact_name,
+                "emergency_contact_number": emergency_contact_number,
+                "booking_date": booking_date
+            }
+            self.bookings.append(booking_details)
+
+            # Save the booking for monthly data analysis
+            self.save_monthly_data(booking_details)
+            print(f"Booking successful! {num_rooms} rooms booked for {guest_name}. Total amount: ${total_amount}")
+        else:
+            print(f"Not enough available rooms. Only {self.available_rooms} rooms left.")
+
+    def save_monthly_data(self, booking_details):
+        """ Save booking data to the monthly data for analysis """
+        booking_month = datetime.datetime.now().strftime("%B")
+        data = {
+            "month": booking_month,
+            "guest_name": booking_details['guest_name'],
+            "num_rooms": booking_details['num_rooms'],
+            "total_amount": booking_details['total_amount'],
+            "payment_method": booking_details['payment_method']
+        }
+        self.monthly_data.append(data)
+
+        # Write data to CSV for easy access
+        with open("monthly_bookings.csv", "a", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=data.keys())
+            if file.tell() == 0:  # If the file is empty, write the header
+                writer.writeheader()
+            writer.writerow(data)
+
+    def show_bookings(self):
+        """ Show all current bookings """
+        if self.bookings:
+            print("\n--- Booking Details ---")
+            for booking in self.bookings:
+                print(f"Name: {booking['guest_name']}, Contact: {booking['contact_number']}, Email: {booking['email']}, Rooms: {booking['num_rooms']}, Room Type: {booking['room_type']}, Total Amount: ${booking['total_amount']}, Payment Method: {booking['payment_method']}, Aadhaar: {booking['aadhaar_number']}, Check-in: {booking['check_in_date']}, Check-out: {booking['check_out_date']}, Emergency Contact: {booking['emergency_contact_name']} - {booking['emergency_contact_number']}")
+        else:
+            print("No bookings yet.")
+
+    def analyze_monthly_data(self):
+        """ Analyze and print the monthly booking data """
+        if self.monthly_data:
+            monthly_summary = {}
+            for data in self.monthly_data:
+                month = data['month']
+                if month not in monthly_summary:
+                    monthly_summary[month] = {
+                        "total_revenue": 0,
+                        "total_bookings": 0
+                    }
+                monthly_summary[month]["total_revenue"] += data["total_amount"]
+                monthly_summary[month]["total_bookings"] += data["num_rooms"]
+
+            print("\n--- Monthly Analysis ---")
+            for month, stats in monthly_summary.items():
+                print(f"Month: {month}")
+                print(f"  Total Revenue: ${stats['total_revenue']}")
+                print(f"  Total Bookings: {stats['total_bookings']} rooms booked")
+        else:
+            print("No booking data for analysis.")
+
+    def show_available_rooms(self):
+        """ Show the number of available rooms """
+        print(f"Available rooms: {self.available_rooms}")
+
+    def show_total_revenue(self):
+        """ Show total revenue from all bookings """
+        print(f"Total revenue from bookings: ${self.total_revenue}")
+
+
+# Booking interface
+def main():
+    # Room booking configuration
+    total_rooms = int(input("Enter the total number of rooms available: "))
+    price_per_room = float(input("Enter the price per room: $"))
+
+    room_booking = RoomBooking(total_rooms, price_per_room)
+
+    # Main program loop
+    while True:
+        print("\n--- Room Booking Menu ---")
+        print("1. Book Room")
+        print("2. Show All Bookings")
+        print("3. Show Available Rooms")
+        print("4. Show Total Revenue")
+        print("5. Analyze Monthly Booking Data")
+        print("6. Exit")
+        
+        choice = int(input("Enter your choice: "))
+        
+        if choice == 1:
+            guest_name = input("Enter the guest's name: ")
+            contact_number = input("Enter the guest's contact number: ")
+            email = input("Enter the guest's email address: ")
+            check_in_date = input("Enter check-in date (YYYY-MM-DD): ")
+            check_out_date = input("Enter check-out date (YYYY-MM-DD): ")
+            num_rooms = int(input("Enter number of rooms to book: "))
+            payment_method = input("Enter payment method (Cash / UPI / Credit/Debit Card): ").capitalize()
+            aadhaar_number = input("Enter Aadhaar Number (if applicable): ")
+            age = int(input("Enter the guest's age: "))
+            room_type = input("Enter room type (Single, Double, Suite): ")
+            total_amount = num_rooms * price_per_room
+            special_requests = input("Any special requests (e.g., late check-in, extra bed): ")
+            emergency_contact_name = input("Enter emergency contact name: ")
+            emergency_contact_number = input("Enter emergency contact number: ")
+            
+            room_booking.book_room(guest_name, contact_number, email, check_in_date, check_out_date, num_rooms, payment_method, aadhaar_number, age, room_type, total_amount, special_requests, emergency_contact_name, emergency_contact_number)
+        elif choice == 2:
+            room_booking.show_bookings()
+        elif choice == 3:
+            room_booking.show_available_rooms()
+        elif choice == 4:
+            room_booking.show_total_revenue()
+        elif choice == 5:
+            room_booking.analyze_monthly_data()
+        elif choice == 6:
+            print("Exiting the application.")
+            break
+        else:
+            print("Invalid choice, please try again.")
+
+if _name_ == "_main_":
+    main()
