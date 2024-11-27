@@ -1,0 +1,139 @@
+import csv
+from datetime import datetime
+
+class RoomBooking:
+    def __init__(self, total_rooms, price_per_room):
+        self.total_rooms = total_rooms
+        self.available_rooms = total_rooms
+        self.price_per_room = price_per_room
+        self.booked_rooms = 0
+        self.total_revenue = 0
+        self.bookings = []
+        self.monthly_data = []
+
+    def book_room(self, guest_name, contact_number, email, rooms, check_in, check_out, payment_method, special_requests=None, emergency_contact=None):
+        if rooms > self.available_rooms:
+            print(f"Not enough rooms available. Only {self.available_rooms} rooms left.")
+            return
+
+        # Update room availability and revenue
+        self.available_rooms -= rooms
+        self.booked_rooms += rooms
+        total_amount = rooms * self.price_per_room
+        self.total_revenue += total_amount
+
+        # Store booking details
+        booking_details = {
+            'guest_name': guest_name,
+            'contact_number': contact_number,
+            'email': email,
+            'rooms': rooms,
+            'check_in': check_in,
+            'check_out': check_out,
+            'payment_method': payment_method,
+            'special_requests': special_requests,
+            'emergency_contact': emergency_contact,
+            'total_amount': total_amount
+        }
+        self.bookings.append(booking_details)
+
+        # Save monthly data to CSV
+        self.save_monthly_data(guest_name, rooms, total_amount, payment_method)
+
+        print(f"Booking successful! {rooms} rooms booked for {guest_name}. Total amount: ${total_amount:.2f}")
+
+    def save_monthly_data(self, guest_name, rooms, total_amount, payment_method):
+        month = datetime.now().strftime('%B')
+        monthly_record = {
+            'Month': month,
+            'Guest Name': guest_name,
+            'Rooms Booked': rooms,
+            'Total Amount': total_amount,
+            'Payment Method': payment_method
+        }
+        self.monthly_data.append(monthly_record)
+
+        # Write to CSV file
+        with open('monthly_bookings.csv', mode='a', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=monthly_record.keys())
+            writer.writerow(monthly_record)
+
+    def show_bookings(self):
+        if not self.bookings:
+            print("No bookings found.")
+            return
+        
+        print("--- Booking Details ---")
+        for booking in self.bookings:
+            print(f"Name: {booking['guest_name']}, Contact: {booking['contact_number']}, Email: {booking['email']}, "
+                  f"Rooms: {booking['rooms']}, Total Amount: ${booking['total_amount']:.2f}, "
+                  f"Payment Method: {booking['payment_method']}, Check-in: {booking['check_in']}, "
+                  f"Check-out: {booking['check_out']}, Emergency Contact: {booking['emergency_contact']}")
+    
+    def analyze_monthly_data(self):
+        if not self.monthly_data:
+            print("No monthly data available.")
+            return
+
+        print("--- Monthly Analysis ---")
+        month = datetime.now().strftime('%B')
+        total_revenue = sum(record['Total Amount'] for record in self.monthly_data if record['Month'] == month)
+        total_bookings = sum(record['Rooms Booked'] for record in self.monthly_data if record['Month'] == month)
+        
+        print(f"Month: {month}")
+        print(f"Total Revenue: ${total_revenue:.2f}")
+        print(f"Total Bookings: {total_bookings} rooms booked")
+    
+    def show_available_rooms(self):
+        print(f"Available rooms: {self.available_rooms}")
+
+    def show_total_revenue(self):
+        print(f"Total revenue from bookings: ${self.total_revenue:.2f}")
+
+# Function to take input from the user and book a room
+def take_input_and_book(hotel):
+    print("Welcome to the Room Booking System!")
+    guest_name = input("Enter your name: ")
+    contact_number = input("Enter your contact number: ")
+    email = input("Enter your email: ")
+    rooms = int(input("How many rooms would you like to book? "))
+    check_in = input("Enter your check-in date (YYYY-MM-DD): ")
+    check_out = input("Enter your check-out date (YYYY-MM-DD): ")
+    payment_method = input("Enter payment method (Credit/Debit Card, Cash, etc.): ")
+    special_requests = input("Any special requests (Extra bed, Late check-in, etc.): ")
+    emergency_contact = input("Enter emergency contact name and number: ")
+
+    # Book the room
+    hotel.book_room(guest_name, contact_number, email, rooms, check_in, check_out, payment_method, special_requests, emergency_contact)
+
+# Example usage:
+
+# Initialize RoomBooking system with 10 rooms and a price of $100 per room
+hotel = RoomBooking(total_rooms=10, price_per_room=100)
+
+# Main loop for interaction
+while True:
+    print("\n1. Book a Room")
+    print("2. Show All Bookings")
+    print("3. Analyze Monthly Data")
+    print("4. Show Available Rooms")
+    print("5. Show Total Revenue")
+    print("6. Exit")
+
+    choice = input("Enter your choice: ")
+
+    if choice == '1':
+        take_input_and_book(hotel)
+    elif choice == '2':
+        hotel.show_bookings()
+    elif choice == '3':
+        hotel.analyze_monthly_data()
+    elif choice == '4':
+        hotel.show_available_rooms()
+    elif choice == '5':
+        hotel.show_total_revenue()
+    elif choice == '6':
+        print("Thank you for using the Room Booking System!")
+        break
+    else:
+        print("Invalid choice. Please try again.")
